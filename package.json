@@ -1,13 +1,12 @@
 {
-  "author": "GitHub Inc.",
-  "name": "which",
+  "name": "@isaacs/which",
   "description": "Like which(1) unix command. Find the first instance of an executable in the PATH.",
   "version": "7.0.0",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/npm/node-which.git"
+    "url": "git+https://github.com/isaacs/which.git"
   },
-  "main": "./dist/commonjs/index.min.js",
+  "main": "./dist/esm/index.min.js",
   "license": "ISC",
   "dependencies": {
     "isexe": "^3.1.4"
@@ -78,6 +77,6 @@
       }
     }
   },
-  "types": "./dist/commonjs/index.d.ts",
+  "types": "./dist/esm/index.d.ts",
   "module": "./dist/esm/index.min.js"
 }
