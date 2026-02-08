@@ -9,6 +9,16 @@ export type WhichOptions = {
   nothrow?: boolean
 }
 
+export type WhichOptionsFirst = WhichOptions & { all?: false }
+export type WhichOptionsAll = WhichOptions & { all: true }
+export type WhichOptionsThrow = WhichOptions & { nothrow?: false }
+export type WhichOptionsNoThrow = WhichOptions & { nothrow: true }
+export type WhichOptionsFirstThrow = WhichOptionsFirst & WhichOptionsThrow
+export type WhichOptionsFirstNoThrow = WhichOptionsFirst &
+  WhichOptionsNoThrow
+export type WhichOptionsAllThrow = WhichOptionsAll & WhichOptionsThrow
+export type WhichOptionsAllNoThrow = WhichOptionsAll & WhichOptionsNoThrow
+
 const isWindows = process.platform === 'win32'
 
 // used to check for slashed in commands passed in. always checks for the posix
@@ -76,7 +86,39 @@ const getPathPart = (raw: string, cmd: string) => {
   return prefix + join(pathPart, cmd)
 }
 
-export const which = async (cmd: string, opt: WhichOptions = {}) => {
+export async function which(cmd: string): Promise<string | null>
+export async function which(
+  cmd: string,
+  opt: WhichOptionsFirstThrow,
+): Promise<string>
+export async function which(
+  cmd: string,
+  opt: WhichOptionsFirstNoThrow,
+): Promise<string | null>
+export async function which(
+  cmd: string,
+  opt: WhichOptionsAllThrow,
+): Promise<string[]>
+export async function which(
+  cmd: string,
+  opt: WhichOptionsAllNoThrow,
+): Promise<string[] | null>
+export async function which(
+  cmd: string,
+  opt: WhichOptionsThrow,
+): Promise<string | string[]>
+export async function which(
+  cmd: string,
+  opt: WhichOptionsNoThrow,
+): Promise<string | string[] | null>
+export async function which(
+  cmd: string,
+  opt: WhichOptions,
+): Promise<string | string[] | null>
+export async function which(
+  cmd: string,
+  opt: WhichOptions = {},
+): Promise<string | string[] | null> {
   const { pathEnv, pathExt, pathExtExe } = getPathInfo(cmd, opt)
   const found = []
 
@@ -109,7 +151,33 @@ export const which = async (cmd: string, opt: WhichOptions = {}) => {
   throw getNotFoundError(cmd, which)
 }
 
-export const whichSync = (cmd: string, opt: WhichOptions = {}) => {
+export function whichSync(cmd: string): string | null
+export function whichSync(cmd: string, opt: WhichOptionsFirstThrow): string
+export function whichSync(
+  cmd: string,
+  opt: WhichOptionsFirstNoThrow,
+): string | null
+export function whichSync(cmd: string, opt: WhichOptionsAllThrow): string[]
+export function whichSync(
+  cmd: string,
+  opt: WhichOptionsAllNoThrow,
+): string[] | null
+export function whichSync(
+  cmd: string,
+  opt: WhichOptionsThrow,
+): string | string[]
+export function whichSync(
+  cmd: string,
+  opt: WhichOptionsNoThrow,
+): string | string[] | null
+export function whichSync(
+  cmd: string,
+  opt: WhichOptions,
+): string | string[] | null
+export function whichSync(
+  cmd: string,
+  opt: WhichOptions = {},
+): string | string[] | null {
   const { pathEnv, pathExt, pathExtExe } = getPathInfo(cmd, opt)
   const found = []
 
