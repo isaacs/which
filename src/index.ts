@@ -86,7 +86,7 @@ const getPathPart = (raw: string, cmd: string) => {
   return prefix + join(pathPart, cmd)
 }
 
-export async function which(cmd: string): Promise<string | null>
+export async function which(cmd: string): Promise<string>
 export async function which(
   cmd: string,
   opt: WhichOptionsFirstThrow,
@@ -151,7 +151,7 @@ export async function which(
   throw getNotFoundError(cmd, which)
 }
 
-export function whichSync(cmd: string): string | null
+export function whichSync(cmd: string): string
 export function whichSync(cmd: string, opt: WhichOptionsFirstThrow): string
 export function whichSync(
   cmd: string,
