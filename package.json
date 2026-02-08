@@ -1,7 +1,7 @@
 {
   "name": "@isaacs/which",
   "description": "Like which(1) unix command. Find the first instance of an executable in the PATH.",
-  "version": "7.0.1",
+  "version": "7.0.2",
   "type": "module",
   "files": [
     "dist"
