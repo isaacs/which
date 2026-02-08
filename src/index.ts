@@ -1,5 +1,13 @@
-const { isexe, sync: isexeSync } = require('isexe')
-const { join, delimiter, sep, posix } = require('path')
+import { isexe, sync as isexeSync } from 'isexe'
+import { join, delimiter, sep, posix } from 'node:path'
+
+export type WhichOptions = {
+  all?: boolean
+  path?: string
+  pathExt?: string
+  delimiter?: string
+  nothrow?: boolean
+}
 
 const isWindows = process.platform === 'win32'
 
@@ -8,30 +16,51 @@ const isWindows = process.platform === 'win32'
 // a posix platform. don't use the isWindows check for this since that is mocked
 // in tests but we still need the code to actually work when called. that is also
 // why it is ignored from coverage.
-/* istanbul ignore next */
-const rSlash = new RegExp(`[${posix.sep}${sep === posix.sep ? '' : sep}]`.replace(/(\\)/g, '\\$1'))
+/* c8 ignore start */
+const rSlash = new RegExp(
+  `[${posix.sep}${sep === posix.sep ? '' : sep}]`.replace(/(\\)/g, '\\$1'),
+)
+/* c8 ignore stop */
 const rRel = new RegExp(`^\\.${rSlash.source}`)
 
-const getNotFoundError = (cmd) =>
-  Object.assign(new Error(`not found: ${cmd}`), { code: 'ENOENT' })
+const getNotFoundError = (cmd: string, from: (...a: any[]) => unknown) => {
+  const er = Object.assign(
+    new Error(`not found: ${cmd}`, { cause: { code: 'ENOENT' } }),
+    { code: 'ENOENT' },
+  )
+  Error.captureStackTrace(er, from)
+  return er
+}
 
-const getPathInfo = (cmd, {
-  path: optPath = process.env.PATH,
-  pathExt: optPathExt = process.env.PATHEXT,
-  delimiter: optDelimiter = delimiter,
-}) => {
+const getPathInfo = (
+  cmd: string,
+  {
+    path: optPath = process.env.PATH,
+    pathExt: optPathExt = process.env.PATHEXT,
+    delimiter: optDelimiter = delimiter,
+  }: WhichOptions,
+) => {
   // If it has a slash, then we don't bother searching the pathenv.
   // just check the file itself, and that's it.
-  const pathEnv = cmd.match(rSlash) ? [''] : [
-    // windows always checks the cwd first
-    ...(isWindows ? [process.cwd()] : []),
-    ...(optPath || /* istanbul ignore next: very unusual */ '').split(optDelimiter),
-  ]
+  const pathEnv =
+    cmd.match(rSlash) ?
+      ['']
+    : [
+        // windows always checks the cwd first
+        ...(isWindows ? [process.cwd()] : []),
+        /* c8 ignore start: very unusual */
+        ...(optPath || '').split(
+          /* c8 ignore stop */
+          optDelimiter,
+        ),
+      ]
 
   if (isWindows) {
-    const pathExtExe = optPathExt ||
-      ['.EXE', '.CMD', '.BAT', '.COM'].join(optDelimiter)
-    const pathExt = pathExtExe.split(optDelimiter).flatMap((item) => [item, item.toLowerCase()])
+    const pathExtExe =
+      optPathExt || ['.EXE', '.CMD', '.BAT', '.COM'].join(optDelimiter)
+    const pathExt = pathExtExe
+      .split(optDelimiter)
+      .flatMap(item => [item, item.toLowerCase()])
     if (cmd.includes('.') && pathExt[0] !== '') {
       pathExt.unshift('')
     }
@@ -41,13 +70,13 @@ const getPathInfo = (cmd, {
   return { pathEnv, pathExt: [''] }
 }
 
-const getPathPart = (raw, cmd) => {
+const getPathPart = (raw: string, cmd: string) => {
   const pathPart = /^".*"$/.test(raw) ? raw.slice(1, -1) : raw
   const prefix = !pathPart && rRel.test(cmd) ? cmd.slice(0, 2) : ''
   return prefix + join(pathPart, cmd)
 }
 
-const which = async (cmd, opt = {}) => {
+export const which = async (cmd: string, opt: WhichOptions = {}) => {
   const { pathEnv, pathExt, pathExtExe } = getPathInfo(cmd, opt)
   const found = []
 
@@ -56,7 +85,10 @@ const which = async (cmd, opt = {}) => {
 
     for (const ext of pathExt) {
       const withExt = p + ext
-      const is = await isexe(withExt, { pathExt: pathExtExe, ignoreErrors: true })
+      const is = await isexe(withExt, {
+        pathExt: pathExtExe,
+        ignoreErrors: true,
+      })
       if (is) {
         if (!opt.all) {
           return withExt
@@ -74,10 +106,10 @@ const which = async (cmd, opt = {}) => {
     return null
   }
 
-  throw getNotFoundError(cmd)
+  throw getNotFoundError(cmd, which)
 }
 
-const whichSync = (cmd, opt = {}) => {
+export const whichSync = (cmd: string, opt: WhichOptions = {}) => {
   const { pathEnv, pathExt, pathExtExe } = getPathInfo(cmd, opt)
   const found = []
 
@@ -86,7 +118,10 @@ const whichSync = (cmd, opt = {}) => {
 
     for (const ext of pathExt) {
       const withExt = p + ext
-      const is = isexeSync(withExt, { pathExt: pathExtExe, ignoreErrors: true })
+      const is = isexeSync(withExt, {
+        pathExt: pathExtExe,
+        ignoreErrors: true,
+      })
       if (is) {
         if (!opt.all) {
           return withExt
@@ -104,8 +139,5 @@ const whichSync = (cmd, opt = {}) => {
     return null
   }
 
-  throw getNotFoundError(cmd)
+  throw getNotFoundError(cmd, whichSync)
 }
-
-module.exports = which
-which.sync = whichSync
