@@ -55,7 +55,7 @@
   },
   "license": "ISC",
   "dependencies": {
-    "isexe": "^3.1.4"
+    "isexe": "^4.0.0"
   },
   "devDependencies": {
     "esbuild": "^0.27.3",
